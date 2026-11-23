@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>SignaPro</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><img src="icons/icon-192.png" alt="" width="28" height="28"><span>SignaPro</span></div>
+  <span id="pageInfo" class="page-info" aria-live="polite"></span>
+  <div class="spacer"></div>
+  <div class="zoom">
+    <button id="zoomOut" class="icon-btn" aria-label="Réduire" title="Réduire">−</button>
+    <button id="zoomIn" class="icon-btn" aria-label="Agrandir" title="Agrandir">+</button>
+  </div>
+  <button id="btnOpen" class="btn">Ouvrir</button>
+  <button id="btnExport" class="btn primary" disabled>Exporter</button>
+</header>
+
+<main id="viewer" class="viewer">
+  <section id="empty" class="empty">
+    <div class="empty-card">
+      <img src="icons/icon-192.png" alt="" width="72" height="72">
+      <h1>Signez vos documents</h1>
+      <p>Ouvrez un PDF ou une photo, touchez l'endroit voulu et posez votre signature, votre cachet et la date.
+         Vos fichiers restent sur cet appareil.</p>
+      <button id="btnOpen2" class="btn primary big">Ouvrir un document</button>
+      <p class="small">PDF ou photo. Pour un fichier Word, convertissez-le d'abord en PDF (voir l'aide).</p>
+      <div class="row">
+        <button id="btnInstall" class="btn" hidden>Installer sur cet appareil</button>
+        <button id="btnHelp" class="btn">Aide</button>
+      </div>
+    </div>
+  </section>
+  <div id="pages" class="pages"></div>
+</main>
+
+<div id="hint" class="hint" hidden>
+  <span id="hintText">Touchez la page à l'endroit voulu</span>
+  <button id="hintCancel" class="link">Annuler</button>
+</div>
+
+<nav class="toolbar" aria-label="Outils">
+  <button class="tool" data-tool="signature">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18c3 0 4-9 6-9s0 8 2 8 2-5 4-5 1 4 3 4" /><path d="M3 21h18"/></svg>
+    <span>Signature</span>
+  </button>
+  <button class="tool" data-tool="initials">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18l4-12 4 12M6.5 14h5"/><path d="M16 18V6h2.5a3 3 0 010 6H16"/></svg>
+    <span>Paraphe</span>
+  </button>
+  <button class="tool" data-tool="stamp">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/></svg>
+    <span>Cachet</span>
+  </button>
+  <button class="tool" data-tool="date">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg>
+    <span>Date</span>
+  </button>
+  <button class="tool" data-tool="text">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12M12 6v13M9 19h6"/></svg>
+    <span>Texte</span>
+  </button>
+  <button class="tool" id="btnAssets">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+    <span>Réglages</span>
+  </button>
+</nav>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<div id="busy" class="busy" hidden><div class="spinner"></div><span id="busyText">Patientez…</span></div>
+
+<input id="fileInput" type="file" hidden
+       accept=".pdf,application/pdf,image/*,.doc,.docx,.odt,.rtf,.xls,.xlsx,.ppt,.pptx">
+<input id="importInput" type="file" accept="image/*" hidden>
+
+<!-- Dessin de signature / paraphe -->
+<dialog id="padDialog">
+  <form method="dialog" class="dlg">
+    <h2 id="padTitle">Dessinez votre signature</h2>
+    <p class="small">Utilisez le doigt, un stylet ou la souris.</p>
+    <div class="pad-wrap">
+      <canvas id="padCanvas" aria-label="Zone de signature"></canvas>
+      <div class="pad-line"><span>Signez ici</span></div>
+    </div>
+    <div class="row between">
+      <div class="seg" role="radiogroup" aria-label="Couleur du trait">
+        <label><input type="radio" name="padColor" value="#111111" checked><span>Noir</span></label>
+        <label><input type="radio" name="padColor" value="#0b3d91"><span>Bleu</span></label>
+      </div>
+      <button type="button" id="padClear" class="btn">Effacer</button>
+    </div>
+    <div class="row end">
+      <button type="button" id="padCancel" class="btn">Annuler</button>
+      <button type="button" id="padSave" class="btn primary">Utiliser</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Import d'une image (cachet, signature scannée) -->
+<dialog id="importDialog">
+  <form method="dialog" class="dlg">
+    <h2 id="importTitle">Importer une image</h2>
+    <div class="checker"><canvas id="importCanvas"></canvas></div>
+    <label class="check"><input type="checkbox" id="importRemoveBg" checked> Rendre le fond blanc transparent</label>
+    <p class="small">Astuce : photographiez le cachet ou la signature sur une feuille blanche, bien éclairée.</p>
+    <div class="row end">
+      <button type="button" id="importCancel" class="btn">Annuler</button>
+      <button type="button" id="importSave" class="btn primary">Utiliser</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Texte / date -->
+<dialog id="textDialog">
+  <form method="dialog" class="dlg">
+    <h2 id="textTitle">Ajouter du texte</h2>
+    <textarea id="textInput" rows="2" placeholder="Votre texte"></textarea>
+    <div class="chips" id="textChips">
+      <button type="button" class="chip" data-fill="date">Date du jour</button>
+      <button type="button" class="chip" data-fill="Lu et approuvé">Lu et approuvé</button>
+      <button type="button" class="chip" data-fill="Bon pour accord">Bon pour accord</button>
+    </div>
+    <div class="checker small-checker"><img id="textPreview" alt="Aperçu"></div>
+    <div class="seg" role="radiogroup" aria-label="Couleur du texte">
+      <label><input type="radio" name="textColor" value="#111111" checked><span>Noir</span></label>
+      <label><input type="radio" name="textColor" value="#0b3d91"><span>Bleu</span></label>
+    </div>
+    <div class="row end">
+      <button type="button" id="textCancel" class="btn">Annuler</button>
+      <button type="button" id="textSave" class="btn primary">Placer sur la page</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Écran de verrouillage -->
+<div id="lock" class="lock" hidden>
+  <div class="lock-card">
+    <img src="icons/icon-192.png" alt="" width="64" height="64">
+    <h2>SignaPro est verrouillé</h2>
+    <p id="lockMsg" class="small">Entrez votre code PIN</p>
+    <input id="lockPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="••••" aria-label="Code PIN">
+    <button id="lockOk" class="btn primary big">Déverrouiller</button>
+    <button id="lockReset" class="link dark" type="button">Code oublié ?</button>
+  </div>
+</div>
+
+<!-- Code PIN -->
+<dialog id="pinDialog">
+  <form method="dialog" class="dlg" onsubmit="return false">
+    <h2 id="pinTitle">Définir un code PIN</h2>
+    <p class="small">De 4 à 8 chiffres. Il verrouille l'application et chiffre votre signature, votre paraphe et votre cachet sur cet appareil.</p>
+    <div id="pinCurRow"><input id="pinCur" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="Code actuel" aria-label="Code actuel"></div>
+    <div id="pinNewRows" class="stack">
+      <input id="pinNew" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="Nouveau code" aria-label="Nouveau code">
+      <input id="pinNew2" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="Confirmer le code" aria-label="Confirmer le code">
+    </div>
+    <p id="pinErr" class="err" hidden></p>
+    <p class="small">Si vous oubliez le code, il faudra le retirer et refaire votre signature : personne ne peut la récupérer.</p>
+    <div class="row end">
+      <button type="button" id="pinCancel" class="btn">Annuler</button>
+      <button type="button" id="pinSave" class="btn primary">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Mes signatures -->
+<dialog id="assetsDialog">
+  <form method="dialog" class="dlg">
+    <h2>Mes signature, paraphe et cachet</h2>
+    <p class="small">Enregistrés une seule fois sur cet appareil, jamais envoyés sur internet.</p>
+    <div id="assetsList" class="assets"></div>
+    <div class="secbox">
+      <h3>Sécurité</h3>
+      <p id="secState" class="small"></p>
+      <div class="row">
+        <button type="button" id="secSet" class="btn">Activer un code PIN</button>
+        <button type="button" id="secChange" class="btn" hidden>Changer le code</button>
+        <button type="button" id="secLock" class="btn" hidden>Verrouiller maintenant</button>
+        <button type="button" id="secOff" class="btn danger" hidden>Retirer le code</button>
+      </div>
+    </div>
+    <div class="row end"><button class="btn primary">Fermer</button></div>
+  </form>
+</dialog>
+
+<!-- Export -->
+<dialog id="exportDialog">
+  <form method="dialog" class="dlg">
+    <h2>Document signé prêt</h2>
+    <p id="exportInfo" class="small"></p>
+    <div class="row">
+      <button type="button" id="exportDownload" class="btn primary">Télécharger</button>
+      <button type="button" id="exportShare" class="btn" hidden>Partager (WhatsApp, e-mail…)</button>
+    </div>
+    <div class="row end"><button class="btn">Fermer</button></div>
+  </form>
+</dialog>
+
+<!-- Aide -->
+<dialog id="helpDialog">
+  <form method="dialog" class="dlg">
+    <h2>Aide</h2>
+    <h3>Comment signer</h3>
+    <ol>
+      <li>Touchez <b>Ouvrir</b> et choisissez un PDF ou une photo.</li>
+      <li>Touchez <b>Signature</b> (la première fois, dessinez-la), puis touchez la page à l'endroit voulu.</li>
+      <li>Glissez pour déplacer, tirez le point du coin pour agrandir, touchez × pour supprimer.</li>
+      <li>Ajoutez le <b>Cachet</b>, la <b>Date</b> ou un <b>Texte</b> de la même façon.</li>
+      <li>Touchez <b>Exporter</b>, puis téléchargez ou partagez le PDF signé.</li>
+    </ol>
+    <h3>Fichier Word</h3>
+    <p>Convertissez-le d'abord en PDF : dans Word, <i>Fichier › Enregistrer sous › PDF</i>. Sur Android, ouvrez-le dans Word ou WPS, puis <i>Partager › Imprimer › Enregistrer au format PDF</i>.</p>
+    <h3>Installer l'application</h3>
+    <p><b>Android (Chrome)</b> : menu ⋮ › <i>Installer l'application</i> (ou <i>Ajouter à l'écran d'accueil</i>).<br>
+       <b>PC (Chrome ou Edge)</b> : icône d'installation dans la barre d'adresse.<br>
+       <b>iPhone / iPad (Safari)</b> : Partager › <i>Sur l'écran d'accueil</i>.<br>
+       Après la première ouverture avec internet, elle fonctionne aussi sans connexion.</p>
+    <h3>À savoir</h3>
+    <p>La signature est une image posée sur le PDF, comme une signature scannée. Ce n'est pas une signature électronique certifiée.</p>
+    <div class="row end"><button class="btn primary">Fermer</button></div>
+  </form>
+</dialog>
+
+<!-- Fichier Word -->
+<dialog id="wordDialog">
+  <form method="dialog" class="dlg">
+    <h2>Convertissez d'abord en PDF</h2>
+    <p>Les fichiers Word (et Excel, PowerPoint) ne peuvent pas être signés directement ici. Il faut les enregistrer en PDF :</p>
+    <ul>
+      <li><b>Sur PC</b> : Word › Fichier › Enregistrer sous › PDF.</li>
+      <li><b>Sur Android</b> : ouvrez le fichier dans Word ou WPS › Partager › Imprimer › Enregistrer au format PDF.</li>
+    </ul>
+    <p>Puis rouvrez le PDF ici.</p>
+    <div class="row end"><button class="btn primary">Compris</button></div>
+  </form>
+</dialog>
+
+<script src="lib/pdf-lib.min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
