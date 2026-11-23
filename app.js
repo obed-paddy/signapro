@@ -1,7 +1,7 @@
 // SignaPro — signature de documents PDF, 100 % locale (aucun fichier n'est envoyé sur internet).
-import * as pdfjsLib from './lib/pdf.min.mjs';
+import * as pdfjsLib from './pdf.min.mjs';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('./lib/pdf.worker.min.mjs', import.meta.url).href;
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('./pdf.worker.min.mjs', import.meta.url).href;
 const { PDFDocument, degrees } = window.PDFLib;
 
 const $ = (id) => document.getElementById(id);

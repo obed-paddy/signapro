@@ -8,14 +8,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>SignaPro</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="topbar">
-  <div class="brand"><img src="icons/icon-192.png" alt="" width="28" height="28"><span>SignaPro</span></div>
+  <div class="brand"><img src="icon-192.png" alt="" width="28" height="28"><span>SignaPro</span></div>
   <span id="pageInfo" class="page-info" aria-live="polite"></span>
   <div class="spacer"></div>
   <div class="zoom">
@@ -29,7 +29,7 @@
 <main id="viewer" class="viewer">
   <section id="empty" class="empty">
     <div class="empty-card">
-      <img src="icons/icon-192.png" alt="" width="72" height="72">
+      <img src="icon-192.png" alt="" width="72" height="72">
       <h1>Signez vos documents</h1>
       <p>Ouvrez un PDF ou une photo, touchez l'endroit voulu et posez votre signature, votre cachet et la date.
          Vos fichiers restent sur cet appareil.</p>
@@ -145,7 +145,7 @@
 <!-- Écran de verrouillage -->
 <div id="lock" class="lock" hidden>
   <div class="lock-card">
-    <img src="icons/icon-192.png" alt="" width="64" height="64">
+    <img src="icon-192.png" alt="" width="64" height="64">
     <h2>SignaPro est verrouillé</h2>
     <p id="lockMsg" class="small">Entrez votre code PIN</p>
     <input id="lockPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="••••" aria-label="Code PIN">
@@ -245,7 +245,7 @@
   </form>
 </dialog>
 
-<script src="lib/pdf-lib.min.js"></script>
+<script src="pdf-lib.min.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

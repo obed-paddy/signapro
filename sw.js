@@ -1,18 +1,18 @@
 // Service worker : met l'application en cache pour qu'elle fonctionne sans connexion.
-const CACHE = 'signapro-v2';
+const CACHE = 'signapro-v3';
 const FILES = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.webmanifest',
-  './lib/pdf-lib.min.js',
-  './lib/pdf.min.mjs',
-  './lib/pdf.worker.min.mjs',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
+  './pdf-lib.min.js',
+  './pdf.min.mjs',
+  './pdf.worker.min.mjs',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
